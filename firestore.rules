@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Organizations collection - simplified rules for development
+    match /organizations/{orgId} {
+      // Allow read for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow organization creation and updates
+      allow create, update: if request.auth != null;
+      
+      // Allow deletion only by organization admin
+      allow delete: if request.auth != null && request.auth.uid == orgId;
+      
+      // Internal users subcollection
+      match /internal_users/{userId} {
+        allow read, write, create: if request.auth != null;
+      }
+      
+      // All subcollections - allow access for authenticated users
+      match /{subcollection}/{document} {
+        allow read, write, create: if request.auth != null;
+      }
+    }
+    
+    // Legacy collections for backward compatibility
+    match /products/{productId} {
+      allow read, write, create: if request.auth != null;
+    }
+    
+    match /sales/{saleId} {
+      allow read, write, create: if request.auth != null;
+    }
+    
+    match /inventory/{transactionId} {
+      allow read, write, create: if request.auth != null;
+    }
+    
+    // Allow users to read/write their own user profile data
+    match /users/{userId} {
+      allow read, write, create: if request.auth != null;
+    }
+    
+    // Global test collection (for connectivity checks)
+    match /test/{document} {
+      allow read, write, create: if request.auth != null;
+    }
+    
+    // Temporary development rule - remove in production
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+} 
